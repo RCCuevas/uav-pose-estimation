@@ -1,0 +1,91 @@
+#-----------------------------------------------------------------------
+# EXECUTABLE NAME & MAIN FILE NAME
+#-----------------------------------------------------------------------
+
+
+#-----------------------------------------------------------------------
+# DIRECTORIES VARIABLES
+#-----------------------------------------------------------------------
+
+# Change this to .. or . depending in which folder is the main file and makefile
+EDIR        := ..
+
+IDIR        := $(EDIR)/include
+ODIR        := $(EDIR)/obj
+
+ISUBDIRS    := $(sort $(dir $(wildcard $(IDIR)/*/)))
+LSUBDIRS    := $(sort $(dir $(wildcard $(LDIR)/*/)))
+INTLIBS     := $(ISUBDIRS:%=-L%)
+INCLUDES    := $(ISUBDIRS:%=-I%)
+EXTLIBS     := $(LSUBDIRS:%=-L%)
+MKDIRS      := $(subst Makefile, , $(strip $(wildcard $(ISUBDIRS:%=%Makefile))))
+
+#-----------------------------------------------------------------------
+# FILES PATH VARIABLES
+#-----------------------------------------------------------------------
+
+ifndef EXEC
+	EXECT     := $(EDIR:%=%/exec)
+else
+	EXECT     := $(EDIR:%=%/$(EXEC))
+endif
+
+ifndef MAIN
+	SRCS      := $(wildcard *.cpp)
+else
+	SRCS      := $(MAIN).cpp
+endif
+
+_OBJS       := $(SRCS:.cpp=.o)
+OBJS        := $(patsubst %,$(ODIR)/%,$(_OBJS))
+
+#-----------------------------------------------------------------------
+# OPENCV SETTINGS
+#-----------------------------------------------------------------------
+
+OCV_VER     := `pkg-config --modversion opencv | sed 's/^\(.\).*/\1/'`
+
+OCVCFLAGS   := `pkg-config opencv --cflags`
+OCVLDFLAGS  := `pkg-config opencv --libs`
+
+#-----------------------------------------------------------------------
+# COMPILER SETTINGS
+#-----------------------------------------------------------------------
+
+CXX         := g++
+PREC        := -O2 -pg
+CXXVER      := -std=c++11
+CXXFLAGS    := $(PREC) $(CXXVER) -D__OCV_VER__=$(OCV_VER) -Wno-deprecated -Wall -Wextra -pedantic
+#LIBS        := -llevmar
+
+#-----------------------------------------------------------------------
+# COMPILE PROJECT RULES
+#-----------------------------------------------------------------------
+all: $(MKDIRS) $(EXECT)
+
+$(EXECT): $(OBJS)
+	$(CXX) -o $@ $^ $(INTLIBS) $(EXTLIBS) $(INCLUDES) $(CXXFLAGS) $(LIBS) $(OCVLDFLAGS)
+
+$(ODIR)/%.o: %.cpp
+	$(CXX) $(OCVCFLAGS) -c -o $@ $^ $(INCLUDES) $(CXXFLAGS)
+
+$(MKDIRS):
+	@$(MAKE) -C $@
+
+#-----------------------------------------------------------------------
+# BUILD & CLEAN PROJECT RULES
+#-----------------------------------------------------------------------
+.PHONY: all clean cleanall $(MKDIRS)
+
+clean:
+ifdef DBDIR
+	@rm -f$(DBDIR)/*
+endif
+	@rm -f $(ODIR)/*.o *~ core $(ISUBDIRS:%=%*~) $(EDIR)/*~ $(EXECT)
+
+cleanall: clean
+ifdef MKDIRS
+ifneq ($(strip $(MKDIRS)),)
+	@$(MAKE) -C $(MKDIRS) cleanall
+endif
+endif
