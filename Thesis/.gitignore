@@ -1,0 +1,8 @@
+*.aux
+*.log
+*.blg
+*.bbl
+*.lol
+*.lot
+*.tcp
+*.tps
