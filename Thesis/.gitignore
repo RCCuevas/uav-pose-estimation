@@ -6,3 +6,8 @@
 *.lot
 *.tcp
 *.tps
+*.o
+*.out
+*.m4v
+*.sh
+*.txt
