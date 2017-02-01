@@ -56,7 +56,7 @@ int main(int argc, char **argv)
   double scaleX, scaleY;
   Mat intrParams = (Mat_<double>(3,3) << fx, 0, cx, 0, fy, cy, 0, 0, 1);
   Mat distCoeffs = (Mat_<double>(1,5) << k1, k2, p1, p2, k3);
-  Mat frame, undistFrame, gryFrame, descriptors;
+  Mat frame, undistFrame, mapX, mapY, gryFrame, descriptors;
   vector<KeyPoint> keypoints;
 
   // Initialazing web camara
@@ -83,6 +83,13 @@ int main(int argc, char **argv)
     scoreType,
     patchSize);
 
+  cap >> frame;
+  if (frame.empty())
+    return 0;
+
+  initUndistortRectifyMap(intrParams, distCoeffs, Mat(), intrParams,
+                          frame.size(), CV_32FC1, mapX, mapY);
+
   for (;;)
   {
     // Starting time count
@@ -90,12 +97,12 @@ int main(int argc, char **argv)
 
     // Capturing an image, and validating if it got correctly captured
     cap >> frame;
-    if (frame.empty() )
+    if (frame.empty())
       break;
 
     undistFrame = frame.clone();
 
-    undistort(frame, undistFrame, intrParams, distCoeffs);
+    remap(frame, undistFrame, mapX, mapY, INTER_LINEAR);
 
     scaleX = (double)IM_WIDTH / frame.cols;
     scaleY = (double)IM_HEIGHT / frame.rows;

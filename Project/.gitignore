@@ -6,15 +6,12 @@
 
 # Unignore all dirs
 !/**/
-
 ### Above combination will ignore all files without extension ###
 
-# Thesis unneeded files
-*.aux
-*.log
-*.blg
-*.bbl
-*.lol
-*.lot
-*.tcp
-*.tps
+# Project unneeded files
+exec
+*.o
+*.out
+*.m4v
+*.sh
+*.txt
